@@ -62,7 +62,8 @@ ngx_http_push_stream_subscriber_handler(ngx_http_request_t *r)
     }
 
     // only accept GET method
-    if (!(r->method & NGX_HTTP_GET)) {
+	// Adam Konrad: Unity only sends custom headers with POST request - AWS ELB sticky cookies are a custom header
+    if (!(r->method & (NGX_HTTP_GET | NGX_HTTP_POST))) {
         ngx_http_push_stream_add_response_header(r, &NGX_HTTP_PUSH_STREAM_HEADER_ALLOW, &NGX_HTTP_PUSH_STREAM_ALLOW_GET);
         return ngx_http_push_stream_send_only_header_response(r, NGX_HTTP_NOT_ALLOWED, NULL);
     }
