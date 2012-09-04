@@ -163,6 +163,8 @@ ngx_http_push_stream_subscriber_polling_handler(ngx_http_request_t *r, ngx_http_
     ngx_int_t                                       greater_message_tag;
     ngx_flag_t                                      has_message_to_send = 0;
     ngx_str_t                                       callback_function_name;
+    u_char                                          last_modified_time[NGX_HTTP_PUSH_STREAM_TIME_FMT_LEN];
+    size_t                                          last_modified_time_len;
 
     if (cf->last_received_message_tag != NULL) {
         ngx_http_push_stream_complex_value(r, cf->last_received_message_tag, &vv_etag);
@@ -249,8 +251,11 @@ ngx_http_push_stream_subscriber_polling_handler(ngx_http_request_t *r, ngx_http_
     ngx_shmtx_unlock(&shpool->mutex);
 
     // polling or long polling without messages to send
-
     ngx_http_push_stream_add_polling_headers(r, greater_message_time, greater_message_tag, temp_pool);
+
+    //AK && MM: sending last modified time in the HTTP response body
+    last_modified_time_len = ngx_http_time(last_modified_time, greater_message_time) - last_modified_time;
+    ngx_http_push_stream_send_response_text(r, last_modified_time, last_modified_time_len, 0);
 
     if (!has_message_to_send) {
         // polling subscriber requests get a 304 with their entity tags preserved if don't have new messages.
