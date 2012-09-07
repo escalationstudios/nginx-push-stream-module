@@ -253,10 +253,6 @@ ngx_http_push_stream_subscriber_polling_handler(ngx_http_request_t *r, ngx_http_
     // polling or long polling without messages to send
     ngx_http_push_stream_add_polling_headers(r, greater_message_time, greater_message_tag, temp_pool);
 
-    //AK && MM: sending last modified time in the HTTP response body
-    last_modified_time_len = ngx_http_time(last_modified_time, greater_message_time) - last_modified_time;
-    ngx_http_push_stream_send_response_text(r, last_modified_time, last_modified_time_len, 0);
-
     if (!has_message_to_send) {
         // polling subscriber requests get a 304 with their entity tags preserved if don't have new messages.
         return ngx_http_push_stream_send_only_header_response(r, NGX_HTTP_NOT_MODIFIED, NULL);
@@ -269,6 +265,9 @@ ngx_http_push_stream_subscriber_polling_handler(ngx_http_request_t *r, ngx_http_
 
     ngx_http_push_stream_add_response_header(r, &NGX_HTTP_PUSH_STREAM_HEADER_TRANSFER_ENCODING, &NGX_HTTP_PUSH_STREAM_HEADER_CHUNCKED);
     ngx_http_send_header(r);
+
+    //Adam Konrad: putting If-Modified-Since and etag to the response body
+    ngx_http_push_stream_send_http_time(r, greater_message_time, greater_message_tag, temp_pool);
 
     // sending response content header
     if (ngx_http_push_stream_send_response_content_header(r, cf) == NGX_ERROR) {

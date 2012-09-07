@@ -1708,3 +1708,30 @@ ngx_http_push_stream_unescape_uri(ngx_str_t *value)
         }
     }
 }
+
+//Adam Konrad:
+//this is a terrible hack to be able to long-poll from Unity 3D
+//Unity 3D v3.x on iOS has a known bug that prevents HTTP response headers from being accessible
+//https://fogbugz.unity3d.com/default.asp?440636_8ev903h148eg7enq
+//Since If-Modified-Since and etag are required for long-polling
+//they are transported in the message body as the first & second line
+static void
+ngx_http_push_stream_send_http_time( ngx_http_request_t *r, time_t time, ngx_int_t tag, ngx_pool_t *temp_pool)
+{
+    u_char last_modified_time_str[NGX_HTTP_PUSH_STREAM_TIME_FMT_LEN];
+    size_t t = ngx_http_time(last_modified_time_str, time) - last_modified_time_str;
+
+    ngx_str_t *time_chunk = ngx_http_push_stream_get_formatted_chunk(last_modified_time_str, t, temp_pool);
+    ngx_http_push_stream_send_response_text(r, time_chunk->data, time_chunk->len, 0);
+
+    if (tag >= 0) {
+        ngx_str_t *etag = ngx_http_push_stream_create_str(temp_pool, NGX_INT_T_LEN);
+        if (etag != NULL) {
+            ngx_sprintf(etag->data, "%ui", tag);
+            etag->len = ngx_strlen(etag->data);
+
+            ngx_str_t *tag_chunk = ngx_http_push_stream_get_formatted_chunk(etag->data, etag->len, temp_pool);
+            ngx_http_push_stream_send_response_text(r, tag_chunk->data, tag_chunk->len, 0);
+        }
+    }
+}

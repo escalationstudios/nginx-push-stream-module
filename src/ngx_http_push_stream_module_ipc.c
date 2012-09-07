@@ -399,6 +399,9 @@ ngx_http_push_stream_respond_to_subscribers(ngx_http_push_stream_channel_t *chan
                 ngx_http_push_stream_add_polling_headers(subscriber->request, msg->time, msg->tag, subscriber->request->pool);
                 ngx_http_send_header(subscriber->request);
 
+                //Adam Konrad: putting If-Modified-Since and etag to the response body
+                ngx_http_push_stream_send_http_time( subscriber->request, msg->time, msg->tag, subscriber->request->pool);
+
                 ngx_http_push_stream_send_response_content_header(subscriber->request, ngx_http_get_module_loc_conf(subscriber->request, ngx_http_push_stream_module));
                 ngx_http_push_stream_send_response_message(subscriber->request, channel, msg, 1, 0);
                 ngx_http_push_stream_send_response_finalize(subscriber->request);
