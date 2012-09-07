@@ -163,9 +163,7 @@ ngx_http_push_stream_subscriber_polling_handler(ngx_http_request_t *r, ngx_http_
     ngx_int_t                                       greater_message_tag;
     ngx_flag_t                                      has_message_to_send = 0;
     ngx_str_t                                       callback_function_name;
-    u_char                                          last_modified_time[NGX_HTTP_PUSH_STREAM_TIME_FMT_LEN];
-    size_t                                          last_modified_time_len;
-
+    
     if (cf->last_received_message_tag != NULL) {
         ngx_http_push_stream_complex_value(r, cf->last_received_message_tag, &vv_etag);
         etag = vv_etag.len ? &vv_etag : NULL;
